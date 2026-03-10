@@ -3,7 +3,7 @@
     <title>Demolish的网安笔记</title>
     <link href="https://Fuzzy-World.github.io/feed.xml" rel="self" />
     <link href="https://Fuzzy-World.github.io" />
-    <updated>2026-03-11T01:55:23+08:00</updated>
+    <updated>2026-03-11T02:19:28+08:00</updated>
     <author>
         <name>Demolish</name>
     </author>
@@ -16,16 +16,18 @@
         </author>
         <link href="https://Fuzzy-World.github.io/test.html"/>
         <id>https://Fuzzy-World.github.io/test.html</id>
+            <category term="靶场"/>
 
         <updated>2026-03-11T01:55:23+08:00</updated>
             <summary type="html">
                 <![CDATA[
-                    test
+                    test 123456
                 ]]>
             </summary>
         <content type="html">
             <![CDATA[
-                <p>test</p>
+                <p>test
+123456</p>
             ]]>
         </content>
     </entry>
