@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+    <title>Demolish的网安笔记</title>
+    <link href="https://Fuzzy-World.github.io/feed.xml" rel="self" />
+    <link href="https://Fuzzy-World.github.io" />
+    <updated>2026-03-11T01:55:23+08:00</updated>
+    <author>
+        <name>Demolish</name>
+    </author>
+    <id>https://Fuzzy-World.github.io</id>
+
+    <entry>
+        <title>test</title>
+        <author>
+            <name>Demolish</name>
+        </author>
+        <link href="https://Fuzzy-World.github.io/test.html"/>
+        <id>https://Fuzzy-World.github.io/test.html</id>
+
+        <updated>2026-03-11T01:55:23+08:00</updated>
+            <summary type="html">
+                <![CDATA[
+                    test
+                ]]>
+            </summary>
+        <content type="html">
+            <![CDATA[
+                <p>test</p>
+            ]]>
+        </content>
+    </entry>
+</feed>

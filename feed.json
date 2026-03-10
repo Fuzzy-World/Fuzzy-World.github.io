@@ -1,0 +1,27 @@
+{
+    "version": "https://jsonfeed.org/version/1",
+    "title": "Demolish的网安笔记",
+    "description": "",
+    "home_page_url": "https://Fuzzy-World.github.io",
+    "feed_url": "https://Fuzzy-World.github.io/feed.json",
+    "user_comment": "",
+    "author": {
+        "name": "Demolish"
+    },
+    "items": [
+        {
+            "id": "https://Fuzzy-World.github.io/test.html",
+            "url": "https://Fuzzy-World.github.io/test.html",
+            "title": "test",
+            "summary": "test",
+            "content_html": "<p>test</p>",
+            "author": {
+                "name": "Demolish"
+            },
+            "tags": [
+            ],
+            "date_published": "2026-03-11T01:55:23+08:00",
+            "date_modified": "2026-03-11T01:55:23+08:00"
+        }
+    ]
+}
